@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>RDK API Spec Generator</title>
+    <style>
+        body { font-family: Arial; margin: 20px; }
+        input, textarea, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
+        label { font-weight: bold; margin-top: 15px; }
+        .block { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h2>RDK API Spec Generator</h2>
+
+    <label>Interface Name (PascalCase):</label>
+    <input type="text" id="interfaceName" placeholder="IXyzAbc">
+
+    <label>Interface Description (Multiline):</label>
+    <textarea id="interfaceDescription" rows="4" placeholder="This interface handles XyzAbc Interface operations..."></textarea>
+
+    <label>Namespace:</label>
+    <input type="text" id="namespace" value="WPEFramework::Exchange">
+
+    <div id="methods"></div>
+    <button onclick="addMethod()">Add Method</button>
+
+    <div id="notifications"></div>
+    <button onclick="addNotification()">Add Notification</button>
+
+    <button onclick="generateHeader()">Generate Header File</button>
+    <button onclick="saveToJson()">Save to JSON</button>
+    <input type="file" id="loadJson" onchange="loadFromJson(event)">
+
+    <script>
+    let methodCount = 0;
+    let notificationCount = 0;
+
+    function addMethod(data = {}) {
+        const container = document.getElementById('methods');
+        const div = document.createElement('div');
+        div.className = 'block';
+        div.innerHTML = `
+            <label>Method Name (camelCase):</label>
+            <input type="text" id="methodName_${methodCount}" value="${data.name || ''}">
+            <label>Description:</label>
+            <textarea id="description_${methodCount}" rows="2">${data.description || ''}</textarea>
+            <label>Request Object (JSON):</label>
+            <textarea id="requestObject_${methodCount}" rows="3">${data.request || ''}</textarea>
+            <label>Response Object (JSON):</label>
+            <textarea id="responseObject_${methodCount}" rows="3">${data.response || ''}</textarea>
+            <label>Error Objects (JSON Array):</label>
+            <textarea id="errorObjects_${methodCount}" rows="3">${data.errors || ''}</textarea>
+        `;
+        container.appendChild(div);
+        methodCount++;
+    }
+
+    function addNotification(data = {}) {
+        const container = document.getElementById('notifications');
+        const div = document.createElement('div');
+        div.className = 'block';
+        div.innerHTML = `
+            <label>Notification Name (camelCase):</label>
+            <input type="text" id="notificationName_${notificationCount}" value="${data.name || ''}">
+            <label>Description:</label>
+            <textarea id="notificationDescription_${notificationCount}" rows="2">${data.description || ''}</textarea>
+            <label>Parameters (JSON):</label>
+            <textarea id="notificationParams_${notificationCount}" rows="3">${data.params || ''}</textarea>
+        `;
+        container.appendChild(div);
+        notificationCount++;
+    }
+
+    function toPascalCase(str) {
+        return str.replace(/(^\w|_\w)/g, m => m.replace('_', '').toUpperCase());
+    }
+
+    function toUnderscore(str) {
+        return str.replace(/^I/, '').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase();
+    }
+
+    function mapType(value) {
+        const type = typeof value;
+        if (type === 'string') return 'string';
+        if (type === 'number') return 'uint32_t';
+        if (type === 'boolean') return 'bool';
+        return 'string';
+    }
+
+    function generateStructs(baseName, obj) {
+        let structDefs = '';
+        for (const [key, value] of Object.entries(obj)) {
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                let structName = baseName + toPascalCase(key);
+                let fields = Object.entries(value).map(([k, v]) => {
+                    return `        ${mapType(v)} ${k};`;
+                }).join('\n');
+                structDefs += `    struct ${structName} {\n${fields}\n    };\n\n`;
+            }
+        }
+        return structDefs;
+    }
+
+    function generateHeader() {
+        const interfaceName = document.getElementById('interfaceName').value;
+        const interfaceDescription = document.getElementById('interfaceDescription').value;
+        const namespace = document.getElementById('namespace').value;
+        const interfaceID = toUnderscore(interfaceName);
+
+        let structdefinitions = "";
+        let notificationStructDefinitions = "";
+        let header = `#pragma once
+
+#include "Module.h"
+
+namespace ${namespace.replace(/::/g, ' { namespace ')} {
+
+/* 
+${interfaceDescription
+  .split('\n')
+  .map(line => ` * ${line}`)
+  .join('\n')}
+*/
+
+/* @json 1.0.0 @text:keep */
+struct EXTERNAL ${interfaceName} : virtual public Core::IUnknown {
+    enum { ID = ID_${interfaceID} };
+
+`;
+
+        for (let i = 0; i < methodCount; i++) {
+            const requestObject = JSON.parse(document.getElementById(`requestObject_${i}`).value);
+            const responseObject = JSON.parse(document.getElementById(`responseObject_${i}`).value);
+            structdefinitions += generateStructs("",requestObject) + generateStructs("",responseObject);
+        }
+        for (let i = 0; i < notificationCount; i++) {
+            const notifyparams = JSON.parse(document.getElementById(`notificationParams_${i}`).value);
+            notificationStructDefinitions = generateStructs("", notifyparams);
+        }
+
+        header += structdefinitions + notificationStructDefinitions;
+
+        for (let i = 0; i < methodCount; i++) {
+            const methodName = document.getElementById(`methodName_${i}`).value;
+            const description = document.getElementById(`description_${i}`).value;
+            const requestObject = JSON.parse(document.getElementById(`requestObject_${i}`).value);
+            const responseObject = JSON.parse(document.getElementById(`responseObject_${i}`).value);
+            const errorObjects = JSON.parse(document.getElementById(`errorObjects_${i}`).value);
+
+            const pascalMethod = toPascalCase(methodName);
+            header += `    /**
+     * @brief ${description}
+     * @text ${methodName}
+`;
+            if (errorObjects.length > 0) {
+                header += `     * Possible errors:
+`;
+                errorObjects.forEach(err => {
+                    header += `     * code: ${err.code}, message: "${err.message}"
+`;
+                });
+            }
+            header += `     */
+`;
+
+            let params = Object.entries(requestObject).map(([key, value]) => {
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    // Use struct for nested object
+                    return `const ${toPascalCase(key)} ${key}`;
+                } else {
+                    // Use individual parameter for base-level field
+                    return mapType(value) === 'string' ? `const string &${key}` : `const ${mapType(value)} ${key}`;
+                }
+            });
+
+            let responseParams = Object.entries(responseObject).map(([key, value]) => {
+                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                    return `${toPascalCase(key)} &${key} /* @out */`;
+                } else {
+                    return `${mapType(value)} &${key} /* @out */`;
+                }
+            });
+
+            let allParams = [...params, ...responseParams].join(', ');
+            header += `    virtual Core::hresult ${pascalMethod}(${allParams}) const = 0;
+
+`;
+        }
+
+    if (notificationCount > 0) {
+        header += `    /* @event */
+    struct EXTERNAL INotification : virtual public Core::IUnknown {
+        enum { ID = ID_${interfaceID}_NOTIFICATION };
+`;
+
+    for (let i = 0; i < notificationCount; i++) {
+        const camelName = document.getElementById(`notificationName_${i}`).value;
+        const pascalName = toPascalCase(camelName);
+        const description = document.getElementById(`notificationDescription_${i}`).value;
+        const params = JSON.parse(document.getElementById(`notificationParams_${i}`).value);
+
+        header += `        /**
+         * @brief ${description}
+         * @text ${camelName}
+         */
+`;
+
+        let paramList = Object.entries(params).map(([key, value]) => {
+            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                return `const ${toPascalCase(key)} ${key}`;
+            } else {
+                return mapType(value) === 'string' ? `const string &${key}` : `const ${mapType(value)} ${key}`;
+            }
+        }).join(', ');
+
+        header += `        virtual void ${pascalName}(${paramList}) { };
+`;
+    }
+
+    header += `    };
+
+    virtual Core::hresult Register(INotification *notification) = 0;
+    virtual Core::hresult Unregister(const INotification *notification) = 0;
+
+`;
+}
+
+
+        header += `};
+
+`;
+        const namespaceDepth = (namespace.match(/::/g) || []).length + 1;
+        header += `${'}'.repeat(namespaceDepth)}
+`;
+
+        const blob = new Blob([header], { type: 'text/plain' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${interfaceName}.h`;
+        link.click();
+    }
+
+    function saveToJson() {
+        const data = {
+            interfaceName: document.getElementById('interfaceName').value,
+            interfaceDescription: document.getElementById('interfaceDescription').value,
+            namespace: document.getElementById('namespace').value,
+            methods: [],
+            notifications: []
+        };
+        for (let i = 0; i < methodCount; i++) {
+            data.methods.push({
+                name: document.getElementById(`methodName_${i}`).value,
+                description: document.getElementById(`description_${i}`).value,
+                request: document.getElementById(`requestObject_${i}`).value,
+                response: document.getElementById(`responseObject_${i}`).value,
+                errors: document.getElementById(`errorObjects_${i}`).value
+            });
+        }
+        for (let i = 0; i < notificationCount; i++) {
+            data.notifications.push({
+                name: document.getElementById(`notificationName_${i}`).value,
+                params: document.getElementById(`notificationParams_${i}`).value,
+                description: document.getElementById(`notificationDescription_${i}`).value 
+            });
+        }
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'interface_definition.json';
+        link.click();
+    }
+
+    function loadFromJson(event) {
+        const file = event.target.files[0];
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = JSON.parse(e.target.result);
+            document.getElementById('interfaceName').value = data.interfaceName;
+            document.getElementById('interfaceDescription').value = data.interfaceDescription || '';
+            document.getElementById('namespace').value = data.namespace;
+            document.getElementById('methods').innerHTML = '';
+            document.getElementById('notifications').innerHTML = '';
+            methodCount = 0;
+            notificationCount = 0;
+            data.methods.forEach(m => addMethod(m));
+            data.notifications.forEach(n => addNotification(n));
+        };
+        reader.readAsText(file);
+    }
+
+    addMethod();
+    addNotification();
+    </script>
+</body>
+</html>
