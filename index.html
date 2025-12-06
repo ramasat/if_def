@@ -59,6 +59,20 @@
             overflow: hidden;
         }
 
+        .panel.preview-panel {
+            position: sticky;
+            top: 20px;
+            align-self: start;
+            max-height: calc(100vh - 40px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel.preview-panel h2 {
+            flex-shrink: 0;
+        }
+
         .panel h2 {
             color: #667eea;
             margin-bottom: 20px;
@@ -216,8 +230,9 @@
             font-size: 0.85em;
             overflow-x: auto;
             overflow-y: auto;
-            max-height: 600px;
             min-width: 0;
+            flex: 1;
+            min-height: 0;
         }
 
         .preview-pane pre {
@@ -430,7 +445,7 @@
             </div>
 
             <!-- Right Panel: Live Preview -->
-            <div class="panel">
+            <div class="panel preview-panel">
                 <h2>Live Preview</h2>
                 <div class="preview-pane" id="previewPane">
                     <pre>// Configure interface on the left to see preview...</pre>
@@ -480,31 +495,31 @@
                 <button class="danger remove-btn" onclick="removeMethod(${id})">Remove</button>
                 
                 <div class="checkbox-group">
-                    <input type="checkbox" id="methodIsProperty-${id}" onchange="togglePropertyMode(${id})" ${data.isProperty ? 'checked' : ''}>
+                    <input type="checkbox" id="methodIsProperty-${id}" onchange="togglePropertyMode(${id})" onfocus="updatePreview(${id}, null)" ${data.isProperty ? 'checked' : ''}>
                     <label>This is a property (@property)</label>
                 </div>
 
                 <div class="form-group">
                     <label>Method Name (camelCase)</label>
                     <input type="text" id="methodName-${id}" value="${data.name || ''}" 
-                           placeholder="myMethodName" oninput="updatePreview()">
+                           placeholder="myMethodName" oninput="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)">
                 </div>
 
                 <div class="form-group">
                     <label>Description (@brief) - single line</label>
                     <input type="text" id="methodDesc-${id}" value="${data.description || ''}" 
-                           placeholder="Describe what this method does" oninput="updatePreview()">
+                           placeholder="Describe what this method does" oninput="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)">
                 </div>
 
                 <div class="form-group">
                     <label>Additional alternate JSON method name (@alt) - optional</label>
                     <input type="text" id="methodAlt-${id}" value="${data.alt || ''}" 
-                           placeholder="Leave empty if you dont want to use additional alternate method in JSON RPC" oninput="updatePreview()">
+                           placeholder="Leave empty if you dont want to use additional alternate method in JSON RPC" oninput="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)">
                 </div>
 
                 <div class="form-group" id="methodPropertyModeGroup-${id}" style="display: none;">
                     <label>Property Access Mode</label>
-                    <select id="methodPropertyMode-${id}" onchange="updatePreview()">
+                    <select id="methodPropertyMode-${id}" onchange="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)">
                         <option value="readwrite" ${(!data.propertyMode || data.propertyMode === 'readwrite') ? 'selected' : ''}>Read-Write (getter + setter)</option>
                         <option value="readonly" ${data.propertyMode === 'readonly' ? 'selected' : ''}>Read-Only (getter only)</option>
                         <option value="writeonly" ${data.propertyMode === 'writeonly' ? 'selected' : ''}>Write-Only (setter only)</option>
@@ -513,17 +528,17 @@
 
                 <div class="form-group">
                     <label id="methodRequestLabel-${id}">Request Parameters (JSON)</label>
-                    <textarea id="methodRequest-${id}" rows="4" placeholder='{\n  "param1": "value",\n  "param2": 0\n}' oninput="updatePreview()">${data.request || ''}</textarea>
+                    <textarea id="methodRequest-${id}" rows="4" placeholder='{\n  "param1": "value",\n  "param2": 0\n}' oninput="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)">${data.request || ''}</textarea>
                     <div class="hint">💡 Arrays→iterators | Objects→structs | "val1|val2" for enums | Types: 8=uint8_t, 16=uint16_t, -32=int32_t, 32.0=float, 64.0=double</div>
                 </div>
 
                 <div class="form-group" id="methodResponseGroup-${id}">
                     <label>Response Parameters (JSON)</label>
-                    <textarea id="methodResponse-${id}" rows="4" placeholder='{\n  "result": ""\n}' oninput="updatePreview()">${data.response || ''}</textarea>
+                    <textarea id="methodResponse-${id}" rows="4" placeholder='{\n  "result": ""\n}' oninput="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)">${data.response || ''}</textarea>
                 </div>
 
                 <div class="checkbox-group">
-                    <input type="checkbox" id="methodOmit-${id}" onchange="updatePreview()" ${data.omit ? 'checked' : ''}>
+                    <input type="checkbox" id="methodOmit-${id}" onchange="updatePreview(${id}, null)" onfocus="updatePreview(${id}, null)" ${data.omit ? 'checked' : ''}>
                     <label>Omit from JSON (@json:omit)</label>
                 </div>
             `;
@@ -576,18 +591,18 @@
                 <div class="form-group">
                     <label>Notification Name (camelCase)</label>
                     <input type="text" id="notifName-${id}" value="${data.name || ''}" 
-                           placeholder="onSomethingChanged" oninput="updatePreview()">
+                           placeholder="onSomethingChanged" oninput="updatePreview(null, ${id})" onfocus="updatePreview(null, ${id})">
                 </div>
 
                 <div class="form-group">
                     <label>Description (@brief) - single line</label>
                     <input type="text" id="notifDesc-${id}" value="${data.description || ''}" 
-                           placeholder="Describe when this notification is triggered" oninput="updatePreview()">
+                           placeholder="Describe when this notification is triggered" oninput="updatePreview(null, ${id})" onfocus="updatePreview(null, ${id})">
                 </div>
 
                 <div class="form-group">
                     <label>Parameters (JSON)</label>
-                    <textarea id="notifParams-${id}" rows="4" placeholder='{\n  "status": ""\n}' oninput="updatePreview()">${data.params || ''}</textarea>
+                    <textarea id="notifParams-${id}" rows="4" placeholder='{\n  "status": ""\n}' oninput="updatePreview(null, ${id})" onfocus="updatePreview(null, ${id})">${data.params || ''}</textarea>
                     <div class="hint">💡 Arrays→iterators | Objects→structs | "val1|val2" for enums | Types: 8=uint8_t, 16=uint16_t, -32=int32_t, 32.0=float, 64.0=double</div>
                 </div>
             `;
@@ -941,13 +956,75 @@
             }
         }
 
-        function updatePreview() {
+        function updatePreview(scrollToMethodId = null, scrollToNotificationId = null) {
             try {
                 const header = generateHeaderCode();
                 const highlighted = syntaxHighlight(header);
                 document.getElementById('previewPane').innerHTML = `<pre>${highlighted}</pre>`;
+                
+                // Auto-scroll to relevant section if specified
+                if (scrollToMethodId !== null) {
+                    scrollPreviewToMethod(scrollToMethodId);
+                } else if (scrollToNotificationId !== null) {
+                    scrollPreviewToNotification(scrollToNotificationId);
+                }
             } catch (error) {
                 document.getElementById('previewPane').innerHTML = `<pre class="error-msg">Error: ${error.message}\n\nStack: ${error.stack}</pre>`;
+            }
+        }
+
+        function scrollPreviewToMethod(methodId) {
+            const previewPane = document.getElementById('previewPane');
+            const methodName = document.getElementById(`methodName-${methodId}`)?.value.trim();
+            if (!methodName) return;
+            
+            const pascalName = toPascalCase(methodName);
+            const previewContent = previewPane.textContent;
+            
+            // Find the position of the method in the preview
+            const methodPattern = new RegExp(`virtual.*${pascalName}\\(`, 'i');
+            const match = previewContent.match(methodPattern);
+            
+            if (match) {
+                const position = match.index;
+                const lines = previewContent.substring(0, position).split('\n');
+                const lineNumber = lines.length;
+                
+                // Estimate scroll position (rough approximation)
+                const lineHeight = 16; // Approximate line height in pixels
+                const scrollPosition = (lineNumber - 5) * lineHeight; // Scroll a bit above the method
+                
+                previewPane.scrollTo({
+                    top: Math.max(0, scrollPosition),
+                    behavior: 'smooth'
+                });
+            }
+        }
+
+        function scrollPreviewToNotification(notificationId) {
+            const previewPane = document.getElementById('previewPane');
+            const notifName = document.getElementById(`notifName-${notificationId}`)?.value.trim();
+            if (!notifName) return;
+            
+            const pascalName = toPascalCase(notifName);
+            const previewContent = previewPane.textContent;
+            
+            // Find the position of the notification in the preview
+            const notifPattern = new RegExp(`virtual void ${pascalName}\\(`, 'i');
+            const match = previewContent.match(notifPattern);
+            
+            if (match) {
+                const position = match.index;
+                const lines = previewContent.substring(0, position).split('\n');
+                const lineNumber = lines.length;
+                
+                const lineHeight = 16;
+                const scrollPosition = (lineNumber - 5) * lineHeight;
+                
+                previewPane.scrollTo({
+                    top: Math.max(0, scrollPosition),
+                    behavior: 'smooth'
+                });
             }
         }
 
