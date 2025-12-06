@@ -1,298 +1,1459 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>RDK API Spec Generator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RDK Entertainment Services API Spec Generator</title>
     <style>
-        body { font-family: Arial; margin: 20px; }
-        input, textarea, button { display: block; margin: 10px 0; width: 100%; padding: 8px; }
-        label { font-weight: bold; margin-top: 15px; }
-        .block { border: 1px solid #ccc; padding: 10px; margin-bottom: 20px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px 20px;
+            margin-bottom: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .layout {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            align-items: start;
+        }
+
+        .panel {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            min-width: 0;
+            overflow: hidden;
+        }
+
+        .panel h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e0e0e0;
+            font-size: 1.3em;
+        }
+
+        .section {
+            margin-bottom: 25px;
+        }
+
+        .section h3 {
+            color: #555;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .section h3:before {
+            content: '▼';
+            margin-right: 10px;
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+
+        .section.collapsed h3:before {
+            transform: rotate(-90deg);
+        }
+
+        .section.collapsed .section-content {
+            display: none;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea,
+        select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        textarea:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.1s;
+        }
+
+        button:hover {
+            background: #5568d3;
+        }
+
+        button:active {
+            transform: scale(0.98);
+        }
+
+        button.secondary {
+            background: #6c757d;
+        }
+
+        button.secondary:hover {
+            background: #5a6268;
+        }
+
+        button.danger {
+            background: #dc3545;
+        }
+
+        button.danger:hover {
+            background: #c82333;
+        }
+
+        button.success {
+            background: #28a745;
+        }
+
+        button.success:hover {
+            background: #218838;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .item-block {
+            background: #f8f9fa;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .item-block .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            padding: 6px 12px;
+            font-size: 0.85em;
+        }
+
+        .preview-pane {
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+            font-size: 0.85em;
+            overflow-x: auto;
+            overflow-y: auto;
+            max-height: 600px;
+            min-width: 0;
+        }
+
+        .preview-pane pre {
+            margin: 0;
+            white-space: pre;
+            overflow-wrap: normal;
+            word-wrap: normal;
+        }
+
+        .hint {
+            font-size: 0.85em;
+            color: #666;
+            font-style: italic;
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+        }
+
+        .checkbox-group label {
+            margin: 0;
+            font-weight: normal;
+        }
+
+        .action-bar {
+            position: sticky;
+            bottom: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            font-size: 1em;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .keyword { color: #569cd6; }
+        .string { color: #ce9178; }
+        .comment { color: #6a9955; }
+        .type { color: #4ec9b0; }
+
+        @media (max-width: 1200px) {
+            .layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .error-msg {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success-msg {
+            background: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+            border: 1px solid #c3e6cb;
+        }
     </style>
 </head>
 <body>
-    <h2>RDK API Spec Generator</h2>
+    <div class="container">
+        <header>
+            <h1>🚀 RDK Entertainment Services API Spec Generator</h1>
+            <p>Generate Thunder/WPEFramework interface headers from JSON-like definitions</p>
+        </header>
 
-    <label>Interface Name (PascalCase):</label>
-    <input type="text" id="interfaceName" placeholder="IXyzAbc">
+        <div class="layout">
+            <!-- Left Panel: Input Form -->
+            <div class="panel">
+                <h2>Interface Definition</h2>
 
-    <label>Interface Description (Multiline):</label>
-    <textarea id="interfaceDescription" rows="4" placeholder="This interface handles XyzAbc Interface operations..."></textarea>
+                <!-- Interface Metadata Section -->
+                <div class="section">
+                    <h3 onclick="toggleSection(this)">Interface Metadata</h3>
+                    <div class="section-content">
+                        <div class="form-group">
+                            <label for="interfaceName">Interface Name (must start with 'I')</label>
+                            <input type="text" id="interfaceName" placeholder="IMyService" oninput="updatePreview()">
+                            <div class="hint">Example: IAnalytics, IDeviceInfo, IDownloadManager</div>
+                        </div>
 
-    <label>Namespace:</label>
-    <input type="text" id="namespace" value="WPEFramework::Exchange">
+                        <div class="form-group">
+                            <label for="interfaceDescription">Interface Description</label>
+                            <textarea id="interfaceDescription" rows="3" placeholder="Describe what this interface does..." oninput="updatePreview()"></textarea>
+                        </div>
 
-    <div id="methods"></div>
-    <button onclick="addMethod()">Add Method</button>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="interfaceVersion">Version</label>
+                                <input type="text" id="interfaceVersion" value="1.0.0" oninput="updatePreview()">
+                            </div>
+                            <div class="form-group">
+                                <label for="copyrightYear">Copyright Year</label>
+                                <input type="number" id="copyrightYear" value="2025" oninput="updatePreview()">
+                            </div>
+                        </div>
 
-    <div id="notifications"></div>
-    <button onclick="addNotification()">Add Notification</button>
+                        <div class="form-group">
+                            <label for="namespace">Namespace</label>
+                            <input type="text" id="namespace" value="WPEFramework::Exchange" oninput="updatePreview()">
+                        </div>
+                    </div>
+                </div>
 
-    <button onclick="generateHeader()">Generate Header File</button>
-    <button onclick="saveToJson()">Save to JSON</button>
-    <input type="file" id="loadJson" onchange="loadFromJson(event)">
+                <!-- Type Reference Section -->
+                <div class="section collapsed">
+                    <h3 onclick="toggleSection(this)">📖 Quick Type Reference</h3>
+                    <div class="section-content">
+                        <div style="background: #1e1e1e; padding: 15px; border-radius: 5px; font-family: monospace; font-size: 12px; line-height: 1.8;">
+                            <div style="color: #4ec9b0; margin-bottom: 10px;"><strong>Numeric Types (use magic numbers):</strong></div>
+                            <div style="margin-left: 15px;">
+                                <span style="color: #b5cea8;">8</span> <span style="color: #dcdcaa;">→ uint8_t</span> &nbsp;&nbsp; <span style="color: #b5cea8;">16</span> <span style="color: #dcdcaa;">→ uint16_t</span> &nbsp;&nbsp; <span style="color: #b5cea8;">32</span> <span style="color: #dcdcaa;">→ uint32_t</span> &nbsp;&nbsp; <span style="color: #b5cea8;">64</span> <span style="color: #dcdcaa;">→ uint64_t</span><br>
+                                <span style="color: #b5cea8;">-8</span> <span style="color: #dcdcaa;">→ int8_t</span> &nbsp;&nbsp; <span style="color: #b5cea8;">-16</span> <span style="color: #dcdcaa;">→ int16_t</span> &nbsp;&nbsp; <span style="color: #b5cea8;">-32</span> <span style="color: #dcdcaa;">→ int32_t</span> &nbsp;&nbsp; <span style="color: #b5cea8;">-64</span> <span style="color: #dcdcaa;">→ int64_t</span><br>
+                                <span style="color: #b5cea8;">32.0</span> <span style="color: #dcdcaa;">→ float</span> &nbsp;&nbsp; <span style="color: #b5cea8;">64.0</span> <span style="color: #dcdcaa;">→ double</span><br>
+                                <span style="color: #6a9955;">Any other integer → uint32_t (default)</span><br>
+                                <span style="color: #6a9955;">Any other decimal → double (default)</span>
+                            </div>
+                            <div style="color: #4ec9b0; margin: 15px 0 10px 0;"><strong>String Enums (use pipe delimiter):</strong></div>
+                            <div style="margin-left: 15px;">
+                                <span style="color: #ce9178;">"success|failure|pending"</span> <span style="color: #dcdcaa;">→ enum with values</span><br>
+                                <span style="color: #6a9955;">// Generates: enum Status : uint8_t { STATUS_SUCCESS, STATUS_FAILURE, STATUS_PENDING };</span>
+                            </div>
+                            <div style="color: #4ec9b0; margin: 15px 0 10px 0;"><strong>Complex Types:</strong></div>
+                            <div style="margin-left: 15px;">
+                                <span style="color: #ce9178;">["item1", "item2"]</span> <span style="color: #dcdcaa;">→ IStringIterator*</span><br>
+                                <span style="color: #ce9178;">[123, 456]</span> <span style="color: #dcdcaa;">→ IValueIterator*</span><br>
+                                <span style="color: #ce9178;">[{...}, {...}]</span> <span style="color: #dcdcaa;">→ Custom struct + iterator</span><br>
+                                <span style="color: #ce9178;">{"key": "value"}</span> <span style="color: #dcdcaa;">→ Nested struct</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Methods Section -->
+                <div class="section">
+                    <h3 onclick="toggleSection(this)">Methods</h3>
+                    <div class="section-content">
+                        <div id="methodsContainer"></div>
+                        <button onclick="addMethod()">+ Add Method</button>
+                    </div>
+                </div>
+
+                <!-- Notifications Section -->
+                <div class="section">
+                    <h3 onclick="toggleSection(this)">Notifications / Events</h3>
+                    <div class="section-content">
+                        <div class="checkbox-group">
+                            <input type="checkbox" id="hasNotifications" onchange="toggleNotifications()">
+                            <label for="hasNotifications">This interface has notifications</label>
+                        </div>
+                        <div id="notificationsContainer" style="display: none; margin-top: 15px;"></div>
+                        <button id="addNotificationBtn" onclick="addNotification()" style="display: none; margin-top: 10px;">+ Add Notification</button>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="action-bar">
+                    <button class="success" onclick="generateAndDownload()">💾 Generate & Download Header</button>
+                    <button class="secondary" onclick="saveToJson()">📄 Save as JSON</button>
+                    <button class="secondary" onclick="document.getElementById('loadJsonInput').click()">📂 Load JSON</button>
+                    <input type="file" id="loadJsonInput" accept=".json" style="display: none;" onchange="loadFromJson(event)">
+                </div>
+            </div>
+
+            <!-- Right Panel: Live Preview -->
+            <div class="panel">
+                <h2>Live Preview</h2>
+                <div class="preview-pane" id="previewPane">
+                    <pre>// Configure interface on the left to see preview...</pre>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <script>
-    let methodCount = 0;
-    let notificationCount = 0;
+        // Global state
+        let state = {
+            methods: [],
+            notifications: [],
+            methodCounter: 0,
+            notificationCounter: 0,
+            structs: new Map(),
+            iterators: new Set()
+        };
 
-    function addMethod(data = {}) {
-        const container = document.getElementById('methods');
-        const div = document.createElement('div');
-        div.className = 'block';
-        div.innerHTML = `
-            <label>Method Name (camelCase):</label>
-            <input type="text" id="methodName_${methodCount}" value="${data.name || ''}">
-            <label>Description:</label>
-            <textarea id="description_${methodCount}" rows="2">${data.description || ''}</textarea>
-            <label>Request Object (JSON):</label>
-            <textarea id="requestObject_${methodCount}" rows="3">${data.request || ''}</textarea>
-            <label>Response Object (JSON):</label>
-            <textarea id="responseObject_${methodCount}" rows="3">${data.response || ''}</textarea>
-            <label>Error Objects (JSON Array):</label>
-            <textarea id="errorObjects_${methodCount}" rows="3">${data.errors || ''}</textarea>
-        `;
-        container.appendChild(div);
-        methodCount++;
-    }
+        // Initialize - don't auto-create method, let user add manually
+        window.onload = function() {
+            updatePreview();
+        };
 
-    function addNotification(data = {}) {
-        const container = document.getElementById('notifications');
-        const div = document.createElement('div');
-        div.className = 'block';
-        div.innerHTML = `
-            <label>Notification Name (camelCase):</label>
-            <input type="text" id="notificationName_${notificationCount}" value="${data.name || ''}">
-            <label>Description:</label>
-            <textarea id="notificationDescription_${notificationCount}" rows="2">${data.description || ''}</textarea>
-            <label>Parameters (JSON):</label>
-            <textarea id="notificationParams_${notificationCount}" rows="3">${data.params || ''}</textarea>
-        `;
-        container.appendChild(div);
-        notificationCount++;
-    }
+        function toggleSection(header) {
+            header.parentElement.classList.toggle('collapsed');
+        }
 
-    function toPascalCase(str) {
-        return str.replace(/(^\w|_\w)/g, m => m.replace('_', '').toUpperCase());
-    }
+        function toggleNotifications() {
+            const hasNotifications = document.getElementById('hasNotifications').checked;
+            document.getElementById('notificationsContainer').style.display = hasNotifications ? 'block' : 'none';
+            document.getElementById('addNotificationBtn').style.display = hasNotifications ? 'block' : 'none';
+            
+            // Don't auto-add notification - let user click "Add Notification" button
+            updatePreview();
+        }
 
-    function toUnderscore(str) {
-        return str.replace(/^I/, '').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase();
-    }
+        function addMethod(data = {}) {
+            const id = state.methodCounter++;
+            state.methods.push({ id, data });
 
-    function mapType(value) {
-        const type = typeof value;
-        if (type === 'string') return 'string';
-        if (type === 'number') return 'uint32_t';
-        if (type === 'boolean') return 'bool';
-        return 'string';
-    }
+            const container = document.getElementById('methodsContainer');
+            const block = document.createElement('div');
+            block.className = 'item-block';
+            block.id = `method-${id}`;
+            block.innerHTML = `
+                <button class="danger remove-btn" onclick="removeMethod(${id})">Remove</button>
+                
+                <div class="checkbox-group">
+                    <input type="checkbox" id="methodIsProperty-${id}" onchange="togglePropertyMode(${id})" ${data.isProperty ? 'checked' : ''}>
+                    <label>This is a property (@property)</label>
+                </div>
 
-    function generateStructs(baseName, obj) {
-        let structDefs = '';
-        for (const [key, value] of Object.entries(obj)) {
-            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                let structName = baseName + toPascalCase(key);
-                let fields = Object.entries(value).map(([k, v]) => {
-                    return `        ${mapType(v)} ${k};`;
-                }).join('\n');
-                structDefs += `    struct ${structName} {\n${fields}\n    };\n\n`;
+                <div class="form-group">
+                    <label>Method Name (camelCase)</label>
+                    <input type="text" id="methodName-${id}" value="${data.name || ''}" 
+                           placeholder="myMethodName" oninput="updatePreview()">
+                </div>
+
+                <div class="form-group">
+                    <label>Description (@brief) - single line</label>
+                    <input type="text" id="methodDesc-${id}" value="${data.description || ''}" 
+                           placeholder="Describe what this method does" oninput="updatePreview()">
+                </div>
+
+                <div class="form-group">
+                    <label>Additional alternate JSON method name (@alt) - optional</label>
+                    <input type="text" id="methodAlt-${id}" value="${data.alt || ''}" 
+                           placeholder="Leave empty if you dont want to use additional alternate method in JSON RPC" oninput="updatePreview()">
+                </div>
+
+                <div class="form-group" id="methodPropertyModeGroup-${id}" style="display: none;">
+                    <label>Property Access Mode</label>
+                    <select id="methodPropertyMode-${id}" onchange="updatePreview()">
+                        <option value="readwrite" ${(!data.propertyMode || data.propertyMode === 'readwrite') ? 'selected' : ''}>Read-Write (getter + setter)</option>
+                        <option value="readonly" ${data.propertyMode === 'readonly' ? 'selected' : ''}>Read-Only (getter only)</option>
+                        <option value="writeonly" ${data.propertyMode === 'writeonly' ? 'selected' : ''}>Write-Only (setter only)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label id="methodRequestLabel-${id}">Request Parameters (JSON)</label>
+                    <textarea id="methodRequest-${id}" rows="4" placeholder='{\n  "param1": "value",\n  "param2": 0\n}' oninput="updatePreview()">${data.request || ''}</textarea>
+                    <div class="hint">💡 Arrays→iterators | Objects→structs | "val1|val2" for enums | Types: 8=uint8_t, 16=uint16_t, -32=int32_t, 32.0=float, 64.0=double</div>
+                </div>
+
+                <div class="form-group" id="methodResponseGroup-${id}">
+                    <label>Response Parameters (JSON)</label>
+                    <textarea id="methodResponse-${id}" rows="4" placeholder='{\n  "result": ""\n}' oninput="updatePreview()">${data.response || ''}</textarea>
+                </div>
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="methodOmit-${id}" onchange="updatePreview()" ${data.omit ? 'checked' : ''}>
+                    <label>Omit from JSON (@json:omit)</label>
+                </div>
+            `;
+            container.appendChild(block);
+            
+            // Initialize property mode if checkbox is checked
+            if (data.isProperty) {
+                togglePropertyMode(id);
             }
         }
-        return structDefs;
-    }
 
-    function generateHeader() {
-        const interfaceName = document.getElementById('interfaceName').value;
-        const interfaceDescription = document.getElementById('interfaceDescription').value;
-        const namespace = document.getElementById('namespace').value;
-        const interfaceID = toUnderscore(interfaceName);
+        function removeMethod(id) {
+            state.methods = state.methods.filter(m => m.id !== id);
+            document.getElementById(`method-${id}`).remove();
+            updatePreview();
+        }
 
-        let structdefinitions = "";
-        let notificationStructDefinitions = "";
-        let header = `#pragma once
+        function togglePropertyMode(id) {
+            const isProperty = document.getElementById(`methodIsProperty-${id}`).checked;
+            const requestLabel = document.getElementById(`methodRequestLabel-${id}`);
+            const responseGroup = document.getElementById(`methodResponseGroup-${id}`);
+            const propertyModeGroup = document.getElementById(`methodPropertyModeGroup-${id}`);
+            
+            if (isProperty) {
+                // Property mode: change label, hide response, show property mode selector
+                requestLabel.textContent = 'Property Parameter (JSON)';
+                responseGroup.style.display = 'none';
+                propertyModeGroup.style.display = 'block';
+            } else {
+                // Method mode: restore normal labels
+                requestLabel.textContent = 'Request Parameters (JSON)';
+                responseGroup.style.display = 'block';
+                propertyModeGroup.style.display = 'none';
+            }
+            
+            updatePreview();
+        }
 
+        function addNotification(data = {}) {
+            const id = state.notificationCounter++;
+            state.notifications.push({ id, data });
+
+            const container = document.getElementById('notificationsContainer');
+            const block = document.createElement('div');
+            block.className = 'item-block';
+            block.id = `notification-${id}`;
+            block.innerHTML = `
+                <button class="danger remove-btn" onclick="removeNotification(${id})">Remove</button>
+                
+                <div class="form-group">
+                    <label>Notification Name (camelCase)</label>
+                    <input type="text" id="notifName-${id}" value="${data.name || ''}" 
+                           placeholder="onSomethingChanged" oninput="updatePreview()">
+                </div>
+
+                <div class="form-group">
+                    <label>Description (@brief) - single line</label>
+                    <input type="text" id="notifDesc-${id}" value="${data.description || ''}" 
+                           placeholder="Describe when this notification is triggered" oninput="updatePreview()">
+                </div>
+
+                <div class="form-group">
+                    <label>Parameters (JSON)</label>
+                    <textarea id="notifParams-${id}" rows="4" placeholder='{\n  "status": ""\n}' oninput="updatePreview()">${data.params || ''}</textarea>
+                    <div class="hint">💡 Arrays→iterators | Objects→structs | "val1|val2" for enums | Types: 8=uint8_t, 16=uint16_t, -32=int32_t, 32.0=float, 64.0=double</div>
+                </div>
+            `;
+            container.appendChild(block);
+        }
+
+        function removeNotification(id) {
+            state.notifications = state.notifications.filter(n => n.id !== id);
+            document.getElementById(`notification-${id}`).remove();
+            updatePreview();
+        }
+
+        function toPascalCase(str) {
+            if (!str) return '';
+            // Handle already PascalCase
+            if (str[0] === str[0].toUpperCase()) return str;
+            return str.charAt(0).toUpperCase() + str.slice(1).replace(/_(\w)/g, (_, c) => c.toUpperCase());
+        }
+
+        function toUnderscoreUpper(str) {
+            if (!str) return '';
+            return str.replace(/^I/, '').replace(/([a-z])([A-Z])/g, '$1_$2').toUpperCase();
+        }
+
+        // Parse JSON value and extract type information
+        function parseJsonValue(value, key) {
+            if (typeof value === 'string') {
+                // Check for float type markers (from preprocessing)
+                if (value === '__FLOAT32__') {
+                    return { cppType: 'float', isCustom: false, value: 32.0 };
+                }
+                if (value === '__FLOAT64__') {
+                    return { cppType: 'double', isCustom: false, value: 64.0 };
+                }
+                
+                // Check for enum values delimited by pipe: "success|failure|pending"
+                if (value.includes('|')) {
+                    const enumName = toPascalCase(key);
+                    const enumValues = value.split('|').map(v => v.trim()).filter(v => v);
+                    return { 
+                        cppType: enumName, 
+                        isCustom: true, 
+                        isEnum: true, 
+                        enumValues: enumValues,
+                        value: enumValues[0] // Use first value as sample
+                    };
+                }
+                
+                return { cppType: 'string', isCustom: false, value };
+            } else if (typeof value === 'number') {
+                // Check for magic numbers that specify exact types
+                // IMPORTANT: Check float/double FIRST before integers, since 64.0 === 64 in JavaScript
+                if (!Number.isInteger(value)) {
+                    // Floating point numbers
+                    if (value === 32.0) {
+                        return { cppType: 'float', isCustom: false, value };
+                    } else if (value === 64.0) {
+                        return { cppType: 'double', isCustom: false, value };
+                    } else {
+                        // Default for other decimals
+                        return { cppType: 'double', isCustom: false, value };
+                    }
+                } else {
+                    // Integer numbers
+                    if (value === 8) {
+                        return { cppType: 'uint8_t', isCustom: false, value };
+                    } else if (value === 16) {
+                        return { cppType: 'uint16_t', isCustom: false, value };
+                    } else if (value === 32) {
+                        return { cppType: 'uint32_t', isCustom: false, value };
+                    } else if (value === 64) {
+                        return { cppType: 'uint64_t', isCustom: false, value };
+                    } else if (value === -8) {
+                        return { cppType: 'int8_t', isCustom: false, value };
+                    } else if (value === -16) {
+                        return { cppType: 'int16_t', isCustom: false, value };
+                    } else if (value === -32) {
+                        return { cppType: 'int32_t', isCustom: false, value };
+                    } else if (value === -64) {
+                        return { cppType: 'int64_t', isCustom: false, value };
+                    } else {
+                        // Default for other integers
+                        return { cppType: 'uint32_t', isCustom: false, value };
+                    }
+                }
+            } else if (typeof value === 'boolean') {
+                return { cppType: 'bool', isCustom: false, value };
+            } else if (Array.isArray(value)) {
+                // Arrays become iterators
+                if (value.length > 0) {
+                    const firstElem = value[0];
+                    
+                    // Check if array element is an object (becomes struct)
+                    if (typeof firstElem === 'object' && firstElem !== null && !Array.isArray(firstElem)) {
+                        // Array of objects -> struct iterator
+                        const structName = toPascalCase(key);
+                        const iterName = `I${structName}Iterator`;
+                        return { 
+                            cppType: `${iterName}*`, 
+                            isCustom: true, 
+                            isIterator: true, 
+                            iteratorOf: structName, 
+                            iteratorName: iterName,
+                            isStructIterator: true
+                        };
+                    }
+                    
+                    const elemType = parseJsonValue(firstElem, key);
+                    
+                    if (elemType.cppType === 'string') {
+                        // String arrays -> IStringIterator
+                        return { cppType: 'IStringIterator*', isCustom: true, isIterator: true, iteratorOf: 'string', iteratorName: 'IStringIterator' };
+                    } else if (elemType.isEnum) {
+                        // Enum arrays -> IEnumIterator
+                        return { cppType: 'IEnumIterator*', isCustom: true, isIterator: true, iteratorOf: elemType.cppType, iteratorName: 'IEnumIterator' };
+                    } else if (elemType.isStruct) {
+                        // This shouldn't happen now as we handle objects above, but keep for safety
+                        const iterName = `I${elemType.cppType}Iterator`;
+                        return { cppType: `${iterName}*`, isCustom: true, isIterator: true, iteratorOf: elemType.cppType, iteratorName: iterName };
+                    } else if (['uint32_t', 'uint8_t', 'uint16_t', 'uint64_t', 'int32_t', 'int16_t', 'int64_t', 'int8_t', 'double', 'float', 'bool'].includes(elemType.cppType)) {
+                        // Numeric/primitive arrays -> IValueIterator
+                        return { cppType: 'IValueIterator*', isCustom: true, isIterator: true, iteratorOf: elemType.cppType, iteratorName: 'IValueIterator' };
+                    } else {
+                        // Generic custom iterator for other types
+                        const iterName = `I${toPascalCase(key)}Iterator`;
+                        return { cppType: `${iterName}*`, isCustom: true, isIterator: true, iteratorOf: elemType.cppType, iteratorName: iterName };
+                    }
+                }
+                return { cppType: 'IStringIterator*', isCustom: true, isIterator: true, iteratorOf: 'string', iteratorName: 'IStringIterator' };
+            } else if (typeof value === 'object' && value !== null) {
+                // Nested object becomes struct
+                const structName = toPascalCase(key);
+                return { cppType: structName, isCustom: true, isStruct: true, structData: value };
+            }
+            return { cppType: 'string', isCustom: false, value: '' };
+        }
+
+        // Extract all structs from JSON recursively
+        function extractStructs(obj, baseName = '', structs = new Map(), iteratorsNeeded = null) {
+            for (const [key, value] of Object.entries(obj)) {
+                if (Array.isArray(value)) {
+                    // Check if array contains objects (which become structs)
+                    if (value.length > 0 && typeof value[0] === 'object' && value[0] !== null && !Array.isArray(value[0])) {
+                        const structName = baseName ? `${baseName}${toPascalCase(key)}` : toPascalCase(key);
+                        const fields = [];
+                        
+                        for (const [fieldKey, fieldValue] of Object.entries(value[0])) {
+                            const typeInfo = parseJsonValue(fieldValue, fieldKey);
+                            fields.push({
+                                name: fieldKey,
+                                type: typeInfo.cppType,
+                                isCustom: typeInfo.isCustom
+                            });
+                            
+                            // Recurse for nested structs
+                            if (typeInfo.isStruct) {
+                                extractStructs({ [fieldKey]: fieldValue }, structName, structs, iteratorsNeeded);
+                            }
+                        }
+                        
+                        structs.set(structName, fields);
+                    } else if (value.length > 0 && iteratorsNeeded) {
+                        // Track iterator type needed for struct fields that are arrays
+                        const typeInfo = parseJsonValue(value, key);
+                        if (typeInfo.iteratorName) {
+                            if (typeInfo.iteratorName === 'IStringIterator') {
+                                iteratorsNeeded.needsStringIterator.add(true);
+                            } else if (typeInfo.iteratorName === 'IValueIterator') {
+                                iteratorsNeeded.needsValueIterator.add(true);
+                            } else if (typeInfo.iteratorName === 'IEnumIterator') {
+                                iteratorsNeeded.needsEnumIterator.add(true);
+                            } else {
+                                iteratorsNeeded.customIterators.set(typeInfo.iteratorName, typeInfo.iteratorOf);
+                            }
+                        }
+                    }
+                } else if (typeof value === 'object' && value !== null) {
+                    const structName = baseName ? `${baseName}${toPascalCase(key)}` : toPascalCase(key);
+                    const fields = [];
+                    
+                    for (const [fieldKey, fieldValue] of Object.entries(value)) {
+                        const typeInfo = parseJsonValue(fieldValue, fieldKey);
+                        fields.push({
+                            name: fieldKey,
+                            type: typeInfo.cppType,
+                            isCustom: typeInfo.isCustom
+                        });
+                        
+                        // Track iterator if field is an array
+                        if (typeInfo.isIterator && iteratorsNeeded) {
+                            if (typeInfo.iteratorName === 'IStringIterator') {
+                                iteratorsNeeded.needsStringIterator.add(true);
+                            } else if (typeInfo.iteratorName === 'IValueIterator') {
+                                iteratorsNeeded.needsValueIterator.add(true);
+                            } else if (typeInfo.iteratorName === 'IEnumIterator') {
+                                iteratorsNeeded.needsEnumIterator.add(true);
+                            } else {
+                                iteratorsNeeded.customIterators.set(typeInfo.iteratorName, typeInfo.iteratorOf);
+                            }
+                        }
+                        
+                        // Recurse for nested structs
+                        if (typeInfo.isStruct) {
+                            extractStructs({ [fieldKey]: fieldValue }, structName, structs, iteratorsNeeded);
+                        }
+                    }
+                    
+                    structs.set(structName, fields);
+                }
+            }
+            return structs;
+        }
+
+        // Extract enums from JSON recursively
+        function extractEnums(obj, enums = new Map()) {
+            for (const [key, value] of Object.entries(obj)) {
+                if (typeof value === 'string' && value.includes('|')) {
+                    // This is an enum
+                    const enumName = toPascalCase(key);
+                    const enumValues = value.split('|').map(v => v.trim()).filter(v => v);
+                    
+                    if (enums.has(enumName)) {
+                        // Enum already exists, validate consistency
+                        const existing = enums.get(enumName);
+                        const existingSet = new Set(existing);
+                        const newSet = new Set(enumValues);
+                        
+                        // Check if they're identical
+                        const identical = existing.length === enumValues.length && 
+                                        existing.every(v => newSet.has(v));
+                        
+                        if (!identical) {
+                            // Check for overlap
+                            const intersection = existing.filter(v => newSet.has(v));
+                            
+                            if (intersection.length === 0) {
+                                // No overlap at all - completely different enums
+                                throw new Error(`Enum name conflict: '${enumName}' is used with completely different values. Please use different names for different enums.\n\nFirst usage: ${existing.join(', ')}\nCurrent usage: ${enumValues.join(', ')}`);
+                            } else if (intersection.length < existing.length || intersection.length < enumValues.length) {
+                                // Partial overlap - likely missing values
+                                throw new Error(`Enum '${enumName}' has inconsistent values across different uses. Please ensure all usages have the same complete set of values.\n\nFirst usage: ${existing.join(', ')}\nCurrent usage: ${enumValues.join(', ')}\nCommon values: ${intersection.join(', ')}`);
+                            }
+                        }
+                        // If identical, no need to add again
+                    } else {
+                        enums.set(enumName, enumValues);
+                    }
+                } else if (Array.isArray(value) && value.length > 0) {
+                    // Check array elements
+                    const firstElem = value[0];
+                    if (typeof firstElem === 'object' && firstElem !== null && !Array.isArray(firstElem)) {
+                        // Recurse into object array
+                        extractEnums(firstElem, enums);
+                    }
+                } else if (typeof value === 'object' && value !== null) {
+                    // Recurse into nested object
+                    extractEnums(value, enums);
+                }
+            }
+            return enums;
+        }
+
+        // Generate enum definitions
+        function generateEnumDefs(enums) {
+            let code = '';
+            for (const [enumName, enumValues] of enums) {
+                const enumPrefix = toUnderscoreUpper(enumName);
+                code += `        enum ${enumName} : uint8_t {\n`;
+                
+                enumValues.forEach((value, index) => {
+                    const enumEntry = `${enumPrefix}_${value.toUpperCase()}`;
+                    code += `            ${enumEntry}`;
+                    if (index < enumValues.length - 1) {
+                        code += ',';
+                    }
+                    code += ` /* @text ${value} */\n`;
+                });
+                
+                code += `        };\n\n`;
+            }
+            return code;
+        }
+
+        // Generate struct definitions
+        function generateStructDefs(structs) {
+            let code = '';
+            for (const [structName, fields] of structs) {
+                code += `        struct ${structName} {\n`;
+                for (const field of fields) {
+                    code += `            ${field.type} ${field.name};\n`;
+                }
+                code += `        };\n\n`;
+            }
+            return code;
+        }
+
+        // Pre-process JSON string to preserve float type hints
+        function preprocessJsonForFloats(jsonStr) {
+            // Replace 32.0 and 64.0 with string markers so they don't get converted to integers
+            // Match pattern: number.0 (with word boundaries to avoid partial matches)
+            return jsonStr
+                .replace(/:\s*32\.0\s*([,}\]])/g, ': "__FLOAT32__"$1')
+                .replace(/:\s*64\.0\s*([,}\]])/g, ': "__FLOAT64__"$1');
+        }
+
+        // Generate method parameters
+        function generateMethodParams(jsonStr, isResponse = false) {
+            if (!jsonStr || !jsonStr.trim()) return [];
+            
+            try {
+                const processedJson = preprocessJsonForFloats(jsonStr);
+                const obj = JSON.parse(processedJson);
+                const params = [];
+                
+                for (const [key, value] of Object.entries(obj)) {
+                    const typeInfo = parseJsonValue(value, key);
+                    let paramStr = '';
+                    
+                    if (isResponse) {
+                        // Output parameters
+                        if (typeInfo.isStruct) {
+                            paramStr = `${typeInfo.cppType}& ${key} /* @out */`;
+                        } else if (typeInfo.isIterator) {
+                            // Iterators as output: Type*& name /* @out */
+                            paramStr = `${typeInfo.cppType}& ${key} /* @out */`;
+                        } else if (typeInfo.cppType === 'string') {
+                            paramStr = `string& ${key} /* @out */`;
+                        } else {
+                            paramStr = `${typeInfo.cppType}& ${key} /* @out */`;
+                        }
+                    } else {
+                        // Input parameters
+                        if (typeInfo.isStruct) {
+                            paramStr = `const ${typeInfo.cppType}& ${key}`;
+                        } else if (typeInfo.isIterator) {
+                            // Iterators as input: Type* const name
+                            paramStr = `${typeInfo.cppType} const ${key}`;
+                        } else if (typeInfo.cppType === 'string') {
+                            paramStr = `const string& ${key}`;
+                        } else {
+                            paramStr = `const ${typeInfo.cppType} ${key}`;
+                        }
+                    }
+                    
+                    params.push(paramStr);
+                }
+                
+                return params;
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function updatePreview() {
+            try {
+                const header = generateHeaderCode();
+                const highlighted = syntaxHighlight(header);
+                document.getElementById('previewPane').innerHTML = `<pre>${highlighted}</pre>`;
+            } catch (error) {
+                document.getElementById('previewPane').innerHTML = `<pre class="error-msg">Error: ${error.message}\n\nStack: ${error.stack}</pre>`;
+            }
+        }
+
+        function generateHeaderCode() {
+            const interfaceName = document.getElementById('interfaceName').value.trim() || 'IMyService';
+            const description = document.getElementById('interfaceDescription').value.trim();
+            const version = document.getElementById('interfaceVersion').value.trim() || '1.0.0';
+            const year = document.getElementById('copyrightYear').value.trim() || '2025';
+            const namespace = document.getElementById('namespace').value.trim() || 'WPEFramework::Exchange';
+
+            const interfaceId = toUnderscoreUpper(interfaceName);
+            const namespaces = namespace.split('::');
+
+            // Copyright header
+            let header = `/*
+ * If not stated otherwise in this file or this component's LICENSE file the
+ * following copyright and licenses apply:
+ *
+ * Copyright ${year} RDK Management
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#pragma once
 #include "Module.h"
-
-namespace ${namespace.replace(/::/g, ' { namespace ')} {
-
-/* 
-${interfaceDescription
-  .split('\n')
-  .map(line => ` * ${line}`)
-  .join('\n')}
-*/
-
-/* @json 1.0.0 @text:keep */
-struct EXTERNAL ${interfaceName} : virtual public Core::IUnknown {
-    enum { ID = ID_${interfaceID} };
-
 `;
 
-        for (let i = 0; i < methodCount; i++) {
-            const requestObject = JSON.parse(document.getElementById(`requestObject_${i}`).value);
-            const responseObject = JSON.parse(document.getElementById(`responseObject_${i}`).value);
-            structdefinitions += generateStructs("",requestObject) + generateStructs("",responseObject);
+            // Auto-include IIteratorType.h if any iterators are used (determined later)
+            // This will be filled in after we detect iterators
+            const iteratorIncludePlaceholder = '___ITERATOR_INCLUDE___';
+            header += iteratorIncludePlaceholder;
+
+            // Namespaces
+            header += '\n';
+            namespaces.forEach(ns => {
+                header += `namespace ${ns} {\n`;
+            });
+
+            // Interface description comment (if provided)
+            if (description) {
+                const descLines = description.split('\n');
+                if (descLines.length === 1) {
+                    header += `    // ${description}\n`;
+                } else {
+                    header += `    /*\n`;
+                    descLines.forEach(line => {
+                        header += `     * ${line}\n`;
+                    });
+                    header += `     */\n`;
+                }
+            }
+
+            // Interface opening
+            header += `    // @json ${version} @text:keep\n`;
+            header += `    struct EXTERNAL ${interfaceName} : virtual public Core::IUnknown {\n`;
+            header += `        enum { ID = ID_${interfaceId} };\n\n`;
+            header += `        virtual ~${interfaceName}() = default;\n\n`;
+
+            // Collect all structs and enums from methods
+            const allStructs = new Map();
+            const allEnums = new Map();
+            const needsStringIterator = new Set();
+            const needsValueIterator = new Set();
+            const needsEnumIterator = new Set();
+            const customIterators = new Map(); // Track custom iterators needed
+            
+            // Pass iterator tracking to extractStructs
+            const iteratorTracking = {
+                needsStringIterator,
+                needsValueIterator,
+                needsEnumIterator,
+                customIterators
+            };
+            
+            state.methods.forEach(({id}) => {
+                const requestJson = document.getElementById(`methodRequest-${id}`)?.value.trim();
+                const responseJson = document.getElementById(`methodResponse-${id}`)?.value.trim();
+                
+                if (requestJson) {
+                    try {
+                        const reqObj = JSON.parse(preprocessJsonForFloats(requestJson));
+                        extractStructs(reqObj, '', allStructs, iteratorTracking);
+                        extractEnums(reqObj, allEnums);
+                        // Check for arrays and track iterators
+                        for (const [key, value] of Object.entries(reqObj)) {
+                            if (Array.isArray(value) && value.length > 0) {
+                                const typeInfo = parseJsonValue(value, key);
+                                if (typeInfo.iteratorName === 'IStringIterator') {
+                                    needsStringIterator.add(true);
+                                } else if (typeInfo.iteratorName === 'IValueIterator') {
+                                    needsValueIterator.add(true);
+                                } else if (typeInfo.iteratorName === 'IEnumIterator') {
+                                    needsEnumIterator.add(true);
+                                } else if (typeInfo.iteratorName) {
+                                    customIterators.set(typeInfo.iteratorName, typeInfo.iteratorOf);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        throw new Error(`Error parsing method request JSON: ${e.message}`);
+                    }
+                }
+                
+                if (responseJson) {
+                    try {
+                        const respObj = JSON.parse(preprocessJsonForFloats(responseJson));
+                        extractStructs(respObj, '', allStructs, iteratorTracking);
+                        extractEnums(respObj, allEnums);
+                        for (const [key, value] of Object.entries(respObj)) {
+                            if (Array.isArray(value) && value.length > 0) {
+                                const typeInfo = parseJsonValue(value, key);
+                                if (typeInfo.iteratorName === 'IStringIterator') {
+                                    needsStringIterator.add(true);
+                                } else if (typeInfo.iteratorName === 'IValueIterator') {
+                                    needsValueIterator.add(true);
+                                } else if (typeInfo.iteratorName === 'IEnumIterator') {
+                                    needsEnumIterator.add(true);
+                                } else if (typeInfo.iteratorName) {
+                                    customIterators.set(typeInfo.iteratorName, typeInfo.iteratorOf);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        throw new Error(`Error parsing method response JSON: ${e.message}`);
+                    }
+                }
+            });
+
+            // Also collect structs and enums from notifications
+            state.notifications.forEach(({id}) => {
+                const paramsJson = document.getElementById(`notifParams-${id}`)?.value.trim();
+                
+                if (paramsJson) {
+                    try {
+                        const paramsObj = JSON.parse(preprocessJsonForFloats(paramsJson));
+                        extractStructs(paramsObj, '', allStructs, iteratorTracking);
+                        extractEnums(paramsObj, allEnums);
+                        for (const [key, value] of Object.entries(paramsObj)) {
+                            if (Array.isArray(value) && value.length > 0) {
+                                const typeInfo = parseJsonValue(value, key);
+                                if (typeInfo.iteratorName === 'IStringIterator') {
+                                    needsStringIterator.add(true);
+                                } else if (typeInfo.iteratorName === 'IValueIterator') {
+                                    needsValueIterator.add(true);
+                                } else if (typeInfo.iteratorName === 'IEnumIterator') {
+                                    needsEnumIterator.add(true);
+                                } else if (typeInfo.iteratorName) {
+                                    customIterators.set(typeInfo.iteratorName, typeInfo.iteratorOf);
+                                }
+                            }
+                        }
+                    } catch (e) {
+                        throw new Error(`Error parsing notification params JSON: ${e.message}`);
+                    }
+                }
+            });
+
+            // Separate iterators into two groups:
+            // 1. Simple iterators (string, value, enum) - used in struct fields, must come BEFORE structs
+            // 2. Struct iterators - use structs, must come AFTER structs
+            const simpleIterators = new Set();
+            const structIterators = new Map();
+            
+            if (needsStringIterator.size > 0) {
+                simpleIterators.add('IStringIterator');
+            }
+            if (needsValueIterator.size > 0) {
+                simpleIterators.add('IValueIterator');
+            }
+            if (needsEnumIterator.size > 0) {
+                simpleIterators.add('IEnumIterator');
+            }
+            
+            // Separate custom iterators into struct vs non-struct
+            for (const [iterName, elemType] of customIterators) {
+                // Check if elemType is one of our defined structs
+                if (allStructs.has(elemType)) {
+                    structIterators.set(iterName, elemType);
+                } else {
+                    simpleIterators.add(iterName);
+                }
+            }
+            
+            // Auto-detect if we need to include IIteratorType.h (if any iterator is used)
+            const hasIterators = simpleIterators.size > 0 || structIterators.size > 0;
+
+            // Generate enums FIRST (can be used by structs and iterators)
+            if (allEnums.size > 0) {
+                header += generateEnumDefs(allEnums);
+            }
+
+            // Generate simple iterators SECOND (before structs that use them)
+            if (simpleIterators.size > 0) {
+                if (simpleIterators.has('IStringIterator')) {
+                    header += `        using IStringIterator = RPC::IIteratorType<string, RPC::ID_STRINGITERATOR>;\n`;
+                }
+                if (simpleIterators.has('IValueIterator')) {
+                    header += `        using IValueIterator = RPC::IIteratorType<uint32_t, ID_VALUEITERATOR>;\n`;
+                }
+                if (simpleIterators.has('IEnumIterator')) {
+                    header += `        using IEnumIterator = RPC::IIteratorType<uint32_t, ID_ENUMITERATOR>;\n`;
+                }
+                header += '\n';
+            }
+
+            // Generate struct definitions THIRD
+            if (allStructs.size > 0) {
+                header += generateStructDefs(allStructs);
+            }
+
+            // Generate struct-based iterators FOURTH (after structs they reference)
+            if (structIterators.size > 0) {
+                for (const [iterName, elemType] of structIterators) {
+                    const idName = `ID_${toUnderscoreUpper(iterName)}`;
+                    header += `        using ${iterName} = RPC::IIteratorType<${elemType}, ${idName}>;\n`;
+                }
+                header += '\n';
+            }
+
+            // Generate methods
+            state.methods.forEach(({id}) => {
+                const name = document.getElementById(`methodName-${id}`)?.value.trim();
+                const desc = document.getElementById(`methodDesc-${id}`)?.value.trim();
+                const alt = document.getElementById(`methodAlt-${id}`)?.value.trim();
+                const isProperty = document.getElementById(`methodIsProperty-${id}`)?.checked;
+                const propertyMode = document.getElementById(`methodPropertyMode-${id}`)?.value || 'readwrite';
+                const isOmit = document.getElementById(`methodOmit-${id}`)?.checked;
+                const requestJson = document.getElementById(`methodRequest-${id}`)?.value.trim();
+                const responseJson = document.getElementById(`methodResponse-${id}`)?.value.trim();
+                
+                if (!name) return;
+                
+                const pascalName = toPascalCase(name);
+                const jsonName = alt || name;
+                
+                // Generate doxygen comments
+                if (isOmit) {
+                    header += `        // @json:omit\n`;
+                }
+                // Always add @text with the method name
+                header += `        // @text ${name}\n`;
+                // If alt is provided, add it as an additional alternate name
+                if (alt) {
+                    header += `        // @alt ${alt}\n`;
+                }
+                header += `        // @brief ${desc || 'TODO: Add description'}\n`;
+                
+                // Add @param documentation
+                if (requestJson) {
+                    try {
+                        const reqObj = JSON.parse(preprocessJsonForFloats(requestJson));
+                        for (const key of Object.keys(reqObj)) {
+                            header += `        // @param ${key}: TODO: Add parameter description\n`;
+                        }
+                    } catch (e) {}
+                }
+                if (responseJson) {
+                    try {
+                        const respObj = JSON.parse(preprocessJsonForFloats(responseJson));
+                        for (const key of Object.keys(respObj)) {
+                            header += `        // @param ${key}: TODO: Add return value description\n`;
+                        }
+                    } catch (e) {}
+                }
+                
+                // Generate method signature(s)
+                if (isProperty) {
+                    // For properties, generate both getter and setter
+                    header += `        // @property\n`;
+                    
+                    const propertyParams = generateMethodParams(requestJson, false);
+                    
+                    // Generate getter (output parameters with @out)
+                    const getterParams = propertyParams.map(p => {
+                        // Convert to output parameter
+                        const match = p.match(/const\s+(\w+)(?:<[^>]+>)?\*?\s+const\s+(\w+)/);
+                        if (match) {
+                            const [, type, name] = match;
+                            if (type.endsWith('Iterator')) {
+                                return `${type}*& ${name} /* @out */`;
+                            } else {
+                                return `${type}& ${name} /* @out */`;
+                            }
+                        }
+                        // Handle struct types: const Type& name -> Type& name /* @out */
+                        const structMatch = p.match(/const\s+(\w+)&\s+(\w+)/);
+                        if (structMatch) {
+                            const [, type, name] = structMatch;
+                            return `${type}& ${name} /* @out */`;
+                        }
+                        // Handle other types: const Type name -> Type& name /* @out */
+                        const simpleMatch = p.match(/const\s+(\w+)\s+(\w+)/);
+                        if (simpleMatch) {
+                            const [, type, name] = simpleMatch;
+                            return `${type}& ${name} /* @out */`;
+                        }
+                        return p;
+                    });
+                    
+                    // Generate getter and/or setter based on property mode
+                    if (propertyMode === 'readonly' || propertyMode === 'readwrite') {
+                        // Generate getter (read)
+                        header += `        virtual uint32_t ${pascalName}(${getterParams.join(', ')}) const = 0;\n`;
+                    }
+                    
+                    if (propertyMode === 'writeonly' || propertyMode === 'readwrite') {
+                        // Generate setter (write)
+                        header += `        virtual uint32_t ${pascalName}(${propertyParams.join(', ')}) = 0;\n`;
+                    }
+                    
+                    header += '\n';
+                } else {
+                    // Regular method
+                    const requestParams = generateMethodParams(requestJson, false);
+                    const responseParams = generateMethodParams(responseJson, true);
+                    const allParams = [...requestParams, ...responseParams];
+                    
+                    header += `        virtual Core::hresult ${pascalName}(${allParams.join(', ')})`;
+                    if (!responseParams.length && !requestParams.some(p => p.includes('@out'))) {
+                        header += ' const';
+                    }
+                    header += ' = 0;\n\n';
+                }
+            });
+
+            // Generate INotification if needed
+            const hasNotifications = document.getElementById('hasNotifications')?.checked;
+            if (hasNotifications && state.notifications.length > 0) {
+                header += `        /* @event */\n`;
+                header += `        struct EXTERNAL INotification : virtual public Core::IUnknown {\n`;
+                header += `            enum { ID = ID_${interfaceId}_NOTIFICATION };\n\n`;
+                
+                state.notifications.forEach(({id}) => {
+                    const name = document.getElementById(`notifName-${id}`)?.value.trim();
+                    const desc = document.getElementById(`notifDesc-${id}`)?.value.trim();
+                    const paramsJson = document.getElementById(`notifParams-${id}`)?.value.trim();
+                    
+                    if (!name) return;
+                    
+                    const pascalName = toPascalCase(name);
+                    
+                    header += `            // @text ${name}\n`;
+                    header += `            // @brief ${desc || 'TODO: Add description'}\n`;
+                    
+                    if (paramsJson) {
+                        try {
+                            const paramsObj = JSON.parse(preprocessJsonForFloats(paramsJson));
+                            for (const key of Object.keys(paramsObj)) {
+                                header += `            // @param ${key}: TODO: Add parameter description\n`;
+                            }
+                        } catch (e) {}
+                    }
+                    
+                    const params = generateMethodParams(paramsJson, false);
+                    header += `            virtual void ${pascalName}(${params.join(', ')}) {};\n\n`;
+                });
+                
+                header += `        };\n\n`;
+                header += `        virtual Core::hresult Register(INotification* notification) = 0;\n`;
+                header += `        virtual Core::hresult Unregister(INotification* notification) = 0;\n\n`;
+            }
+
+            // Close interface
+            header += `    };\n`;
+            
+            // Close namespaces
+            namespaces.forEach(() => {
+                header += `}\n`;
+            });
+
+            // Replace iterator include placeholder based on whether we detected any iterators
+            const iteratorInclude = hasIterators ? '\n// @stubgen:include <com/IIteratorType.h>\n' : '\n';
+            header = header.replace('___ITERATOR_INCLUDE___', iteratorInclude);
+
+            return header;
         }
-        for (let i = 0; i < notificationCount; i++) {
-            const notifyparams = JSON.parse(document.getElementById(`notificationParams_${i}`).value);
-            notificationStructDefinitions = generateStructs("", notifyparams);
+
+        function syntaxHighlight(code) {
+            return code
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/(\/\/.*)/g, '<span class="comment">$1</span>')
+                .replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="comment">$1</span>')
+                .replace(/\b(struct|enum|virtual|namespace|pragma|include|const|public|private|default|using)\b/g, '<span class="keyword">$1</span>')
+                .replace(/\b(Core::hresult|Core::IUnknown|EXTERNAL|ID|RPC::IIteratorType|string)\b/g, '<span class="type">$1</span>');
         }
 
-        header += structdefinitions + notificationStructDefinitions;
+        function generateAndDownload() {
+            const interfaceName = document.getElementById('interfaceName').value.trim() || 'IMyService';
+            const header = generateHeaderCode();
+            
+            const blob = new Blob([header], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${interfaceName}.h`;
+            link.click();
+        }
 
-        for (let i = 0; i < methodCount; i++) {
-            const methodName = document.getElementById(`methodName_${i}`).value;
-            const description = document.getElementById(`description_${i}`).value;
-            const requestObject = JSON.parse(document.getElementById(`requestObject_${i}`).value);
-            const responseObject = JSON.parse(document.getElementById(`responseObject_${i}`).value);
-            const errorObjects = JSON.parse(document.getElementById(`errorObjects_${i}`).value);
+        function saveToJson() {
+            const data = {
+                version: '2.0',
+                interface: {
+                    name: document.getElementById('interfaceName').value,
+                    description: document.getElementById('interfaceDescription').value,
+                    version: document.getElementById('interfaceVersion').value,
+                    year: document.getElementById('copyrightYear').value,
+                    namespace: document.getElementById('namespace').value
+                },
+                methods: [],
+                notifications: []
+            };
 
-            const pascalMethod = toPascalCase(methodName);
-            header += `    /**
-     * @brief ${description}
-     * @text ${methodName}
-`;
-            if (errorObjects.length > 0) {
-                header += `     * Possible errors:
-`;
-                errorObjects.forEach(err => {
-                    header += `     * code: ${err.code}, message: "${err.message}"
-`;
+            state.methods.forEach(({id}) => {
+                data.methods.push({
+                    name: document.getElementById(`methodName-${id}`).value,
+                    description: document.getElementById(`methodDesc-${id}`).value,
+                    alt: document.getElementById(`methodAlt-${id}`).value,
+                    request: document.getElementById(`methodRequest-${id}`).value,
+                    response: document.getElementById(`methodResponse-${id}`).value,
+                    isProperty: document.getElementById(`methodIsProperty-${id}`).checked,
+                    propertyMode: document.getElementById(`methodPropertyMode-${id}`)?.value || 'readwrite',
+                    omit: document.getElementById(`methodOmit-${id}`).checked
+                });
+            });
+
+            if (document.getElementById('hasNotifications').checked) {
+                state.notifications.forEach(({id}) => {
+                    data.notifications.push({
+                        name: document.getElementById(`notifName-${id}`).value,
+                        description: document.getElementById(`notifDesc-${id}`).value,
+                        params: document.getElementById(`notifParams-${id}`).value
+                    });
                 });
             }
-            header += `     */
-`;
 
-            let params = Object.entries(requestObject).map(([key, value]) => {
-                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    // Use struct for nested object
-                    return `const ${toPascalCase(key)} ${key}`;
-                } else {
-                    // Use individual parameter for base-level field
-                    return mapType(value) === 'string' ? `const string &${key}` : `const ${mapType(value)} ${key}`;
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `${data.interface.name}_spec.json`;
+            link.click();
+        }
+
+        function loadFromJson(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    // Load interface metadata
+                    if (data.interface) {
+                        document.getElementById('interfaceName').value = data.interface.name || '';
+                        document.getElementById('interfaceDescription').value = data.interface.description || '';
+                        document.getElementById('interfaceVersion').value = data.interface.version || '1.0.0';
+                        document.getElementById('copyrightYear').value = data.interface.year || '2025';
+                        document.getElementById('namespace').value = data.interface.namespace || 'WPEFramework::Exchange';
+                        // includeIterator field removed - now auto-detected
+                    } else {
+                        // Backward compatibility with old format
+                        document.getElementById('interfaceName').value = data.interfaceName || '';
+                        document.getElementById('interfaceDescription').value = data.interfaceDescription || '';
+                        document.getElementById('namespace').value = data.namespace || 'WPEFramework::Exchange';
+                    }
+                    
+                    // Clear existing methods and notifications
+                    document.getElementById('methodsContainer').innerHTML = '';
+                    document.getElementById('notificationsContainer').innerHTML = '';
+                    state.methods = [];
+                    state.notifications = [];
+                    state.methodCounter = 0;
+                    state.notificationCounter = 0;
+                    
+                    // Load methods
+                    if (data.methods && data.methods.length > 0) {
+                        data.methods.forEach(m => addMethod(m));
+                    } else {
+                        addMethod();
+                    }
+                    
+                    // Load notifications
+                    if (data.notifications && data.notifications.length > 0) {
+                        document.getElementById('hasNotifications').checked = true;
+                        toggleNotifications();
+                        data.notifications.forEach(n => addNotification(n));
+                    }
+                    
+                    updatePreview();
+                } catch (error) {
+                    alert('Error loading JSON: ' + error.message);
                 }
-            });
-
-            let responseParams = Object.entries(responseObject).map(([key, value]) => {
-                if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                    return `${toPascalCase(key)} &${key} /* @out */`;
-                } else {
-                    return `${mapType(value)} &${key} /* @out */`;
-                }
-            });
-
-            let allParams = [...params, ...responseParams].join(', ');
-            header += `    virtual Core::hresult ${pascalMethod}(${allParams}) const = 0;
-
-`;
+            };
+            reader.readAsText(file);
         }
-
-    if (notificationCount > 0) {
-        header += `    /* @event */
-    struct EXTERNAL INotification : virtual public Core::IUnknown {
-        enum { ID = ID_${interfaceID}_NOTIFICATION };
-`;
-
-    for (let i = 0; i < notificationCount; i++) {
-        const camelName = document.getElementById(`notificationName_${i}`).value;
-        const pascalName = toPascalCase(camelName);
-        const description = document.getElementById(`notificationDescription_${i}`).value;
-        const params = JSON.parse(document.getElementById(`notificationParams_${i}`).value);
-
-        header += `        /**
-         * @brief ${description}
-         * @text ${camelName}
-         */
-`;
-
-        let paramList = Object.entries(params).map(([key, value]) => {
-            if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-                return `const ${toPascalCase(key)} ${key}`;
-            } else {
-                return mapType(value) === 'string' ? `const string &${key}` : `const ${mapType(value)} ${key}`;
-            }
-        }).join(', ');
-
-        header += `        virtual void ${pascalName}(${paramList}) { };
-`;
-    }
-
-    header += `    };
-
-    virtual Core::hresult Register(INotification *notification) = 0;
-    virtual Core::hresult Unregister(const INotification *notification) = 0;
-
-`;
-}
-
-
-        header += `};
-
-`;
-        const namespaceDepth = (namespace.match(/::/g) || []).length + 1;
-        header += `${'}'.repeat(namespaceDepth)}
-`;
-
-        const blob = new Blob([header], { type: 'text/plain' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `${interfaceName}.h`;
-        link.click();
-    }
-
-    function saveToJson() {
-        const data = {
-            interfaceName: document.getElementById('interfaceName').value,
-            interfaceDescription: document.getElementById('interfaceDescription').value,
-            namespace: document.getElementById('namespace').value,
-            methods: [],
-            notifications: []
-        };
-        for (let i = 0; i < methodCount; i++) {
-            data.methods.push({
-                name: document.getElementById(`methodName_${i}`).value,
-                description: document.getElementById(`description_${i}`).value,
-                request: document.getElementById(`requestObject_${i}`).value,
-                response: document.getElementById(`responseObject_${i}`).value,
-                errors: document.getElementById(`errorObjects_${i}`).value
-            });
-        }
-        for (let i = 0; i < notificationCount; i++) {
-            data.notifications.push({
-                name: document.getElementById(`notificationName_${i}`).value,
-                params: document.getElementById(`notificationParams_${i}`).value,
-                description: document.getElementById(`notificationDescription_${i}`).value 
-            });
-        }
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = 'interface_definition.json';
-        link.click();
-    }
-
-    function loadFromJson(event) {
-        const file = event.target.files[0];
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            const data = JSON.parse(e.target.result);
-            document.getElementById('interfaceName').value = data.interfaceName;
-            document.getElementById('interfaceDescription').value = data.interfaceDescription || '';
-            document.getElementById('namespace').value = data.namespace;
-            document.getElementById('methods').innerHTML = '';
-            document.getElementById('notifications').innerHTML = '';
-            methodCount = 0;
-            notificationCount = 0;
-            data.methods.forEach(m => addMethod(m));
-            data.notifications.forEach(n => addNotification(n));
-        };
-        reader.readAsText(file);
-    }
-
-    addMethod();
-    addNotification();
     </script>
 </body>
 </html>
